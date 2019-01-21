@@ -1,0 +1,11 @@
+version: '2'
+services:
+  default:
+    build:
+      context: .
+    cap_add:
+      - SYS_ADMIN
+    ports:
+      - "5900:5900"
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup
