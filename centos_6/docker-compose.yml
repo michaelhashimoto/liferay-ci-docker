@@ -1,0 +1,7 @@
+version: '2'
+services:
+  default:
+    build:
+      context: .
+    ports:
+      - "5901:5900"
