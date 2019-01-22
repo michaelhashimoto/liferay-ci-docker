@@ -85,5 +85,90 @@ ENV ROOT_PASSWORD=password
 RUN su root sh -c "yes $ROOT_PASSWORD | vncpasswd" \
 	&& echo "root:$ROOT_PASSWORD" | chpasswd
 
+# Install Git
+RUN yum update -y \
+	&& yum install -y git \
+	&& yum clean all \
+	&& rm -rf /tmp/*
+
+# Clone Liferay Portal
+RUN mkdir -p /opt/dev/projects/github \
+	&& cd /opt/dev/projects/github \
+	&& git clone https://github.com/liferay/liferay-portal.git
+
+# Setup Firefox Settings
+RUN yum update -y \
+	&& yum install -y firefox \
+	&& rm -rf /opt/firefox \
+	&& yum clean all \
+	&& rm -rf /tmp/*
+
+# Install Firefox 60.4.0esr
+ARG FIREFOX_VERSION=60.4.0esr
+RUN FIREFOX_DOWNLOAD_URL="https://download-installer.cdn.mozilla.net/pub/firefox/releases/$FIREFOX_VERSION/linux-x86_64/en-US/firefox-$FIREFOX_VERSION.tar.bz2" \
+	&& wget --no-verbose -O /tmp/firefox.tar.bz2 $FIREFOX_DOWNLOAD_URL \
+	&& tar -C /opt -xjf /tmp/firefox.tar.bz2 \
+	&& rm -f /tmp/firefox.tar.bz2 \
+	&& mv /opt/firefox /opt/firefox-$FIREFOX_VERSION \
+	&& echo 'user_pref("app.update.enabled", false);' >> /opt/firefox-$FIREFOX_VERSION/defaults/pref/channel-prefs.js
+
+# Install Firefox 52.0.2esr
+ARG FIREFOX_VERSION=52.0.2esr
+RUN FIREFOX_DOWNLOAD_URL="https://download-installer.cdn.mozilla.net/pub/firefox/releases/$FIREFOX_VERSION/linux-x86_64/en-US/firefox-$FIREFOX_VERSION.tar.bz2" \
+	&& wget --no-verbose -O /tmp/firefox.tar.bz2 $FIREFOX_DOWNLOAD_URL \
+	&& tar -C /opt -xjf /tmp/firefox.tar.bz2 \
+	&& rm -f /tmp/firefox.tar.bz2 \
+	&& mv /opt/firefox /opt/firefox-$FIREFOX_VERSION \
+	&& echo 'user_pref("app.update.enabled", false);' >> /opt/firefox-$FIREFOX_VERSION/defaults/pref/channel-prefs.js
+
+# Configure Default Firefox to FF52
+ARG FIREFOX_VERSION=52.0.2esr
+RUN ln -fs /opt/firefox-$FIREFOX_VERSION/firefox /usr/bin/firefox \
+	&& ln -fs /opt/firefox-$FIREFOX_VERSION /opt/firefox
+
+# Install Oracle JDK 8
+ARG JAVA_DOWNLOAD_URL=https://download.oracle.com/otn-pub/java/jdk/8u201-b09/42970487e3af4f5aa5bca3f542482c60/jdk-8u201-linux-x64.tar.gz
+RUN mkdir -p /opt/java/ \
+	&& wget --no-cookies --no-check-certificate --header "Cookie: oraclelicense=accept-securebackup-cookie" "$JAVA_DOWNLOAD_URL" -P /opt/java/ \
+	&& tar -xf /opt/java/jdk-8u201-linux-x64.tar.gz -C /opt/java/ \
+	&& ln -fs /opt/java/jdk1.8.0_201 /opt/java/jdk8 \
+	&& rm /opt/java/jdk-8u201-linux-x64.tar.gz
+
+# Install Open JDK 11
+ARG JAVA_DOWNLOAD_URL=https://download.java.net/openjdk/jdk11/ri/openjdk-11+28_linux-x64_bin.tar.gz
+RUN mkdir -p /opt/java/ \
+	&& wget $JAVA_DOWNLOAD_URL -P /opt/java/ \
+	&& tar -xf /opt/java/openjdk-11+28_linux-x64_bin.tar.gz -C /opt/java/ \
+	&& ln -fs /opt/java/jdk-11 /opt/java/jdk11 \
+	&& rm /opt/java/openjdk-11+28_linux-x64_bin.tar.gz
+
+# Configure Default JDK to JDK8
+RUN ln -fs /opt/java/jdk8 /opt/java/jdk
+
+# Install Apache Ant 1.9.4
+RUN mkdir -p /opt/java/ant/ \
+	&& wget http://archive.apache.org/dist/ant/binaries/apache-ant-1.9.4-bin.tar.gz -P /opt/java/ant \
+	&& tar -xf /opt/java/ant/apache-ant-1.9.4-bin.tar.gz -C /opt/java/ant/ \
+	&& mv /opt/java/ant/apache-ant-*/* /opt/java/ant \
+	&& rm -fr /opt/java/ant/apache-ant-*
+
+# Install Database Clients
+RUN yum install -y https://download.postgresql.org/pub/repos/yum/11/redhat/rhel-7-x86_64/pgdg-centos11-11-2.noarch.rpm \
+	&& sudo yum install -y \
+		mysql \
+		postgresql11 \
+	&& yum clean all \
+	&& rm -rf /tmp/*
+
+# Set Environment Variables
+ENV ANT_HOME=/opt/java/ant
+ENV ANT_OPTS="-Xms1024m -Xmx3072m"
+ENV JAVA_HOME="/opt/java/jdk"
+ENV JAVA_OPTS="-Xms1024m -Xmx3072m"
+
+RUN echo 'PATH="/opt/java/ant/bin:/opt/java/jdk/bin:${PATH}"' > /root/.bash_profile
+
+ENV PATH="/opt/java/ant/bin:/opt/java/jdk/bin:${PATH}"
+
 # Start a Login Session (https://hub.docker.com/_/centos)
 ENTRYPOINT /usr/sbin/init
