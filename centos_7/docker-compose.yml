@@ -33,9 +33,9 @@ services:
     image: postgres:10.6
     restart: always
     environment:
-      POSTGRES_PASSWORD: root
+      POSTGRES_PASSWORD: liferay123
   postgresql-11:
     image: postgres:11.1
     restart: always
     environment:
-      POSTGRES_PASSWORD: root
+      POSTGRES_PASSWORD: liferay123

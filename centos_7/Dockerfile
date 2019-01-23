@@ -165,6 +165,7 @@ ENV ANT_HOME=/opt/java/ant
 ENV ANT_OPTS="-Xms1024m -Xmx3072m"
 ENV JAVA_HOME="/opt/java/jdk"
 ENV JAVA_OPTS="-Xms1024m -Xmx3072m"
+ENV DISPLAY=":0"
 
 RUN echo 'PATH="/opt/java/ant/bin:/opt/java/jdk/bin:${PATH}"' > /root/.bash_profile
 
